@@ -9,7 +9,7 @@ Any pastebin service that allows you to get a direct link to the raw content of 
 **Important** PasteBomb is still in version 0.01 this is currently not ment to be used for penertation testing but rather to demonstrate the concept of a RAT that uses Pastebin as a C2 server.
 # Usage
 
-## beta
+## Beta
 The beta version allows you to receive output from the `cmd` command through a discord webhook
 
 ## Commands
