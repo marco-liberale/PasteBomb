@@ -62,11 +62,10 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-// TODO: make it check if the file exists to make it non repetitive
-func AutostartOnWin(executablePath string) {
+// DONE: make it check if the file exists to make it non repetitive
+func AutostartOnWindows(executablePath string) {
 	var startupPath string
 	admin, err := isAdmin()
-	// Copies the executable to the startup folder and prints the result
 	if err != nil {
 		fmt.Println("Error checking admin privileges:", err)
 		return
@@ -77,15 +76,19 @@ func AutostartOnWin(executablePath string) {
 	} else {
 		startupPath = filepath.Join(os.Getenv("APPDATA"), "Microsoft\\Windows\\Start Menu\\Programs\\Startup")
 	}
-	// Function to execute a shell script named "otherScript.sh"
 
 	destPath := filepath.Join(startupPath, filepath.Base(executablePath))
+
+	// Check if the file already exists
+	if _, err := os.Stat(destPath); err == nil {
+		fmt.Println("File already exists in startup folder:", destPath)
+		return
+	}
 
 	err = copyFile(executablePath, destPath)
 	if err != nil {
 		fmt.Println("Error copying file:", err)
 	} else {
-		// Function to determine the OS and set the program to run at startup accordingly
 		fmt.Println("Successfully copied to startup folder:", destPath)
 	}
 }
@@ -125,9 +128,16 @@ func autostartOnLinuxAndDarwin(executablePath string) {
 	}
 
 	destPath := filepath.Join(autostartDir, filepath.Base(executablePath))
-	err = os.Symlink(executablePath, destPath)
+
+	// Check if the file already exists
+	if _, err := os.Stat(destPath); err == nil {
+		fmt.Println("File already exists in autostart directory:", destPath)
+		return
+	}
+
+	err = copyFile(executablePath, destPath)
 	if err != nil {
-		fmt.Println("Error creating symlink in autostart directory:", err)
+		fmt.Println("Error copying file to autostart directory:", err)
 	} else {
 		fmt.Println("Successfully added to autostart:", destPath)
 	}
@@ -140,7 +150,7 @@ func runAtStartup() {
 	}
 
 	if runtime.GOOS == "windows" {
-		AutostartOnWin(executable)
+		AutostartOnWindows(executable)
 	} else {
 		autostartOnLinuxAndDarwin(executable)
 	}
