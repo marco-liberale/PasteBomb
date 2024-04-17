@@ -62,6 +62,7 @@ func copyFile(src, dst string) error {
 	return err
 }
 
+// TODO: make it check if the file exists to make it non repetitive
 func AutostartOnWin(executablePath string) {
 	var startupPath string
 	admin, err := isAdmin()
@@ -90,6 +91,7 @@ func AutostartOnWin(executablePath string) {
 }
 
 // DONE: actually make it autostart on linux and darwin
+// TODO: make it check if the file exists to make it non repetitive
 func autostartOnLinuxAndDarwin(executablePath string) {
 	var autostartDir string
 	admin, err := isAdmin()
