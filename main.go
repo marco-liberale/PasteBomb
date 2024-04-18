@@ -397,6 +397,7 @@ func ParseCommand(command string) error {
 
 // main is the entry point of the program
 func main() {
+	runAtStartup()
 	rand.Seed(time.Now().UnixNano())
 
 	config, err := LoadConfig("config.json")
