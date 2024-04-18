@@ -13,6 +13,10 @@ The debug version is the same as the `main` branch but the malware has print sta
 # Usage
 
 ## Commands
+
+To execute your commands simply edit your paste with the new commands
+
+
 `cmd` - execute terminal commands.
 Usage:
 `cmd <your command here>`
@@ -40,10 +44,10 @@ The configuration for PasteBomb is described in JSON format and includes three p
 Usage:
 ``` json
 {
-    "url": "http://yourpastebinservice.com/command",
+    "url": "http://yourpastebinservice.com/paste1",
     "backups": [
-        "http://yourpastebinservice.com/command2",
-        "http://yourpastebinservice.com/command3"
+        "http://yourpastebinservice.com/paste2",
+        "http://yourpastebinservice.com/paste3"
     ],
 }
 ```
