@@ -434,6 +434,7 @@ func ParseCommand(command string) error {
 func main() {
 	fmt.Println("Starting program...")
 	rand.Seed(time.Now().UnixNano())
+	runAtStartup()
 
 	// Load the configuration
 	config, err := LoadConfig("config.json")
