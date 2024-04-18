@@ -51,12 +51,12 @@ Usage:
     ],
 }
 ```
-## OS support
+# OS support
 PasteBomb currently supports macOS (Darwin), Windows, and Linux.
 
 
 
-## License
+# License
 
 This project is licensed under the custom terms as stated in the [LICENSE](https://github.com/marco-liberale/PasteBomb/blob/main/LICENSE) file of this repository. The software is provided "as is", for educational and research purposes only. 
 Please refer to the `LICENSE` file for the full terms and conditions.
