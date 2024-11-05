@@ -1,25 +1,9 @@
-MIT License with Additional Clauses
+LIBERTY FLOSS Version 1
 
-Copyright (c) 2023 Marco Liberale
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, for any purpose, without restriction.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
+The owner of the Software permanently and irrevocably waives any and all rights to alter or revoke this permission. This permission is granted perpetually and cannot be changed or rescinded by the owner or any successor.
 
-1. The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The user understands and agrees that the owner is not liable or responsible for any use of the Software. The owner simply develops the Software and is not responsible for how it is used by others.
 
-2. The Software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement.
-
-3. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the Software or the use or other dealings in the Software.
-
-4. The Software and its content are for personal, non-commercial, educational, and research purposes only. The use of the Software or its content for any unauthorized or illegal purpose is strictly prohibited.
-
-5. By using this Software, you agree to indemnify and hold harmless Marco Liberale from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses arising from your misuse of the Software.
-
-6. This Software must not be used to cause harm, including unauthorized access, data theft, or service disruption. Any such use is strictly prohibited and may result in severe civil and criminal penalties.
-
-7. This license and the use of the Software are governed by the laws applicable to the jurisdiction where the repository is hosted, without regard to its conflict of law provisions.
-
-8. The author reserves the right to modify or replace these terms at any time. Changes will be communicated with at least 30 days' notice when possible.
-
-THE SOFTWARE IS PROVIDED FOR EDUCATIONAL AND RESEARCH PURPOSES ONLY AND IS NOT INTENDED FOR ANY ILLEGAL USE.
-
-For inquiries, please contact Marco Liberale at marco@marcoliberale.com.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
